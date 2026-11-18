@@ -1,0 +1,13 @@
+{
+  "name": "portd",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A portable desktop in one HTML file.",
+  "license": "MIT",
+  "scripts": {
+    "test": "PLAYWRIGHT=playwright node suite/run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.45.0"
+  }
+}
