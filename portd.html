@@ -2753,10 +2753,10 @@ const backup = {
   name() { const who = profileName(); return (who ? safeName(who) : 'portd') + '-' + new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10) + '.portd'; },
   /* Writes the whole desktop as one .portd file. If it cannot be written whole, nothing is written and the error names what is too big. */
   async download() {
-    const text = await serialize(Object.assign({}, state, { savedAt: Date.now() }));
+    const text = await serialize(Object.assign({}, state, { savedAt: Date.now() })), sum = summarize(state.fs);      /* counted before the date of this backup is written into the settings */
     saveToHost(this.name(), [text], 'application/json');
     setSettings({ backup: { lastBackupAt: Date.now() } });
-    toast('Backup saved: ' + sumText(summarize(state.fs)) + '.');
+    toast('Backup saved: ' + sumText(sum) + '.');
   },
   async restore() {
     writable();
