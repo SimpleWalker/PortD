@@ -4,14 +4,14 @@ Guidance for AI agents (and humans in a hurry) working on PortD. Read this befor
 
 ## What this is
 
-PortD is a portable desktop in **one HTML file**, `portd.html` (version 1.0.0). It runs from `file://` in Edge or Chrome, can be installed as a PWA, and is meant for locked-down corporate computers. Everything lives in that file: markup, CSS, JavaScript, built-in apps and the default program.
+PortD is a portable desktop in **one HTML file**, `portd.html` (version 1.1.0). It runs from `file://` in Edge or Chrome, can be installed as a PWA, and is meant for locked-down corporate computers. Everything lives in that file: markup, CSS, JavaScript, built-in apps and the default program.
 
 100 % of the code was written by Claude (Fable 5.2). It is MIT licensed, copyright 2026 SimpleWalker.
 
 ## Repository layout
 
 ```
-portd.html        the whole product (about 3,560 lines)
+portd.html        the whole product (about 3,650 lines)
 README.md         user-friendly guide
 AGENTS.md         this file
 docs/TECHNICAL.md technical reference (formats, architecture, behaviour)
@@ -50,9 +50,9 @@ npm install --save-dev playwright     # once
 PLAYWRIGHT=playwright node suite/run.js
 ```
 
-Or, where Playwright is installed elsewhere, set `PLAYWRIGHT` to its path. `ONLY=shell|files|programs|data|polish|audit` runs one module. The full run takes well over ten minutes, so run it in the background with a long timeout. Details in `suite/README.md`.
+Or, where Playwright is installed elsewhere, set `PLAYWRIGHT` to its path. `ONLY=shell|files|programs|data|polish|freeze|audit` runs one module. The full run takes well over ten minutes, so run it in the background with a long timeout. Details in `suite/README.md`.
 
-Expected result for 1.0.0: **1,377 checks, 0 failed** without the prototype file (1,384 with it). Exit codes: 0 pass, 1 failures, 2 could not run.
+Expected result for 1.1.0: **1,412 checks, 0 failed** without the prototype file (1,419 expected with it; not run for 1.1.0). Exit codes: 0 pass, 1 failures, 2 could not run.
 
 ## How to change things
 

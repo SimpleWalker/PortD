@@ -112,7 +112,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   let page = await ctx.open(file);
   console.log('  browser version  ' + ctx.browser()?.version?.() + ' / ' + await page.evaluate(() => navigator.userAgent));
   check('boots from file://', await page.evaluate(() => location.protocol === 'file:' && !!window.PortDHost));
-  check('version is 1.0.0', await page.evaluate(() => PortDHost.version) === '1.0.0');
+  check('version is 1.1.0', await page.evaluate(() => PortDHost.version) === '1.1.0');
   check('hook holds only the agreed members', (await page.evaluate(() => Object.keys(PortDHost).sort().join())) === 'DIR,Path,checkData,getState,launch,openPath,version,vfs,wm');
   check('CSP is exactly the specified policy', /<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; form-action 'none'; base-uri 'none'">/.test(html));
   check('no service worker, web app manifest or PWA code in the file', !/serviceWorker|rel=["']?manifest|\.webmanifest|beforeinstallprompt|apple-mobile/i.test(html));
@@ -197,7 +197,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   await saved(page);
   const before = await fsText(page);
   const rec = await idb(page, 'portd1', 'state');
-  check('the record is the document: format, version, fs', rec.format === 'portd-data' && rec.formatVersion === 2 && rec.appVersion === '1.0.0' && rec.savedAt > 0 && JSON.stringify(rec.fs) === before);
+  check('the record is the document: format, version, fs', rec.format === 'portd-data' && rec.formatVersion === 2 && rec.appVersion === '1.1.0' && rec.savedAt > 0 && JSON.stringify(rec.fs) === before);
   check('a change shows Saving, then Saved', await page.evaluate(async () => { PortDHost.vfs.write('P:\\User\\Documents\\s.txt', 's'); await 0; const st = () => document.querySelector('#tray [data-tray=save]').dataset.status, a = st(); await new Promise(r => setTimeout(r, 1200)); return a + '>' + st(); }) === 'pending>saved');
   const prev = await idb(page, 'portd1', 'prev');
   check('the copy before the last save is kept as the previous version', JSON.stringify(prev.fs) === before);
@@ -246,7 +246,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
       same: JSON.stringify(opened.fs) === JSON.stringify(st.fs), openedKeys: Object.keys(opened).join(), again: await t.serialize(opened) === text, fsText: JSON.stringify(st.fs) };
   });
   check('fields in order: format … integrity, summary, fs', T.keys === 'format,formatVersion,appVersion,createdAt,savedAt,integrity,summary,fs', T.keys);
-  check('format is portd-data, version 2', T.doc.format === 'portd-data' && T.doc.formatVersion === 2 && T.doc.appVersion === '1.0.0');
+  check('format is portd-data, version 2', T.doc.format === 'portd-data' && T.doc.formatVersion === 2 && T.doc.appVersion === '1.1.0');
   check('integrity is the SHA-256 of exactly the fs text in the file', T.doc.integrity.alg === 'SHA-256' && T.doc.integrity.value === T.sha, [T.doc.integrity, T.sha]);
   check('checksum verifies', T.ok === 'ok');
   check('a changed file is noticed', T.bad === 'mismatch');
@@ -267,7 +267,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   check('formatVersion 1 is refused with the prototype message', await opens({ ...good(), formatVersion: 1 }) === PROTO_MSG);
   check('a document with no formatVersion is refused the same way', await opens({ format: 'portd-data', fs: tree }) === PROTO_MSG);
   const newer = await opens({ ...good(), formatVersion: 3, appVersion: '1.4.0' });
-  check('a newer file is refused, naming both versions', /uses data format 3 and was written by PortD 1\.4\.0\. This is PortD 1\.0\.0, which reads data format 2 and older/.test(newer), newer);
+  check('a newer file is refused, naming both versions', /uses data format 3 and was written by PortD 1\.4\.0\. This is PortD 1\.1\.0, which reads data format 2 and older/.test(newer), newer);
   for (const [name, doc] of [['null', null], ['an array', []], ['a string', '"x"'], ['another format', { format: 'portd-app', formatVersion: 3 }], ['plain JSON', { hello: 1 }]])
     check('not a PortD data file: ' + name, await opens(doc) === 'This file is not a PortD data file.');
   await dmg('no drive', d => { delete d.fs; }, /is damaged: P: is neither a file nor a folder/);
@@ -307,7 +307,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   await page.waitForTimeout(900); await reload(page);
   check('…and the stored record is untouched, reload after reload', (await idb(page, 'portd1', 'state')).formatVersion === 1 && JSON.stringify((await idb(page, 'portd1', 'state')).fs) === JSON.stringify(okDoc.fs));
   await seedBad({ ...okDoc, formatVersion: 7, appVersion: '3.0.0' });
-  check('a newer desktop is refused, naming both versions', /The desktop stored in this browser uses data format 7 and was written by PortD 3\.0\.0\. This is PortD 1\.0\.0/.test(await text(page, '#refused')));
+  check('a newer desktop is refused, naming both versions', /The desktop stored in this browser uses data format 7 and was written by PortD 3\.0\.0\. This is PortD 1\.1\.0/.test(await text(page, '#refused')));
   const broken = JSON.parse(JSON.stringify(okDoc)); delete broken.fs.c.User.c.Desktop;
   await seedBad(broken);
   check('a damaged desktop is refused, naming what is wrong', /is damaged: the folder P:\\User\\Desktop is missing/.test(await text(page, '#refused')));
@@ -350,7 +350,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   await ctx.close();
   variant(mfile);
   ctx = await profile(mprof); page = await ctx.open(mfile);
-  check('the 1.0.0 build refuses that format 4 desktop', /uses data format 4 and was written by PortD 1\.0\.0\. This is PortD 1\.0\.0, which reads data format 2 and older/.test(await text(page, '#refused') || ''), await text(page, 'body'));
+  check('the 1.1.0 build refuses that format 4 desktop', /uses data format 4 and was written by PortD 1\.1\.0\. This is PortD 1\.1\.0, which reads data format 2 and older/.test(await text(page, '#refused') || ''), await text(page, 'body'));
   check('…and leaves it as it is', (await idb(page, 'portd1', 'state')).formatVersion === 4);
   await ctx.close();
   const gprof = newDir();
@@ -486,6 +486,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   if (!process.env.ONLY || process.env.ONLY === 'programs') await require('./programs.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'data') await require('./data.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'polish') await require('./polish.js')(kit);
+  if (!process.env.ONLY || process.env.ONLY === 'freeze') await require('./freeze.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'audit') await require('./audit.js')(kit);
 
   /* ------------------------------------------------------------------ */

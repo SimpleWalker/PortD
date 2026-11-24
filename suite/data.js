@@ -121,7 +121,7 @@ module.exports = async ({ check, section, profile, newDir, variant, file, saved,
   const day = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   check('without a display name the file is portd-YYYY-MM-DD.portd', first.name === 'portd-' + day + '.portd', first.name);
   const doc1 = JSON.parse(first.text), t1 = tally(doc1.fs);
-  check('it is a format 2 data document with its fields in order', Object.keys(doc1).join() === 'format,formatVersion,appVersion,createdAt,savedAt,integrity,summary,fs' && doc1.format === 'portd-data' && doc1.formatVersion === 2 && doc1.appVersion === '1.0.0');
+  check('it is a format 2 data document with its fields in order', Object.keys(doc1).join() === 'format,formatVersion,appVersion,createdAt,savedAt,integrity,summary,fs' && doc1.format === 'portd-data' && doc1.formatVersion === 2 && doc1.appVersion === '1.1.0');
   check('its checksum is the SHA-256 of exactly the fs text in the file', doc1.integrity.alg === 'SHA-256' && doc1.integrity.value === crypto.createHash('sha256').update(fsTextOf(first.text), 'utf8').digest('hex'));
   check('its summary matches an independent count of the file', JSON.stringify(doc1.summary) === JSON.stringify(t1), [doc1.summary, t1]);
   check('the toast gives the same summary: "Backup saved: ' + words(t1) + '."', await a.toast() === 'Backup saved: ' + words(t1) + '.', await a.toast());
@@ -184,7 +184,7 @@ module.exports = async ({ check, section, profile, newDir, variant, file, saved,
   const before = await b.fsText();
   const refusedWith = async (name, body) => { await b.choose(put(name, body)); const m = await b.dlg(); await b.press('OK'); return m || ''; };
   check('a prototype data file is refused with the message', (await refusedWith('proto.portd', Object.assign({}, docR, { formatVersion: 1 }))).includes('This file was made by the PortD prototype (0.x) and can\'t be opened by PortD 1.0.'));
-  check('a newer file is refused, naming both versions', /"newer\.portd" uses data format 3 and was written by PortD 9\.9\.9\. This is PortD 1\.0\.0, which reads data format 2 and older\./.test(await refusedWith('newer.portd', Object.assign({}, docR, { formatVersion: 3, appVersion: '9.9.9' }))));
+  check('a newer file is refused, naming both versions', /"newer\.portd" uses data format 3 and was written by PortD 9\.9\.9\. This is PortD 1\.1\.0, which reads data format 2 and older\./.test(await refusedWith('newer.portd', Object.assign({}, docR, { formatVersion: 3, appVersion: '9.9.9' }))));
   check('a file that is not a data file', /"notes\.portd" is not a PortD data file\./.test(await refusedWith('notes.portd', 'just some text')) && /is not a PortD data file/.test(await refusedWith('pkg.portd', KIT)));
   const noDesk = JSON.parse(rich.text); delete noDesk.fs.c.User.c.Desktop;
   check('a damaged file is refused, saying what is wrong', /"damaged\.portd" is damaged: the folder P:\\User\\Desktop is missing\./.test(await refusedWith('damaged.portd', noDesk)));

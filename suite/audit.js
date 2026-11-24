@@ -75,7 +75,7 @@ module.exports = async ({ check, section, profile, newDir, file, saved }) => {
   /* fit: surfaces inside the screen, no label cut off, dialog buttons reachable, desktop icons not overlapping */
   const FIT = () => {
     const bad = [], W = innerWidth, H = innerHeight, box = el => el.getBoundingClientRect(), nm = el => (el.id ? '#' + el.id : '.' + String(el.className).trim().split(/\s+/).join('.')) + ' "' + (el.textContent || '').trim().slice(0, 24) + '"';
-    for (const el of document.querySelectorAll('.win:not(.min),.menu,.dlg,#startmenu.open,.toast,.notice,.tip,#taskbar,#robar,.snappanel')) {
+    for (const el of document.querySelectorAll('.win:not(.min),.menu,.dlg,#startmenu.open,.toast,.notice,.tip,#taskbar,#robar,#frbar,.snappanel')) {
       if (!el.getClientRects().length) continue;
       const r = box(el);
       if (r.left < -1 || r.top < -1 || r.right > W + 1 || r.bottom > H + 1) bad.push('off screen: ' + nm(el) + ' ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join());
@@ -123,6 +123,12 @@ module.exports = async ({ check, section, profile, newDir, file, saved }) => {
     'the window menu and the snap panel': async () => { await launch('builtin:calc'); await page.locator('.win.active .wbtn.mx').hover(); await settle(750); },
     'Settings > Appearance': async () => { await launch('builtin:settings', { tab: 'appearance' }); },
     'Settings > Appearance with a custom taskbar colour': async () => { await set({ taskbar: { tint: 'custom' } }); await launch('builtin:settings', { tab: 'appearance' }); await page.locator('.spane').evaluate(e => e.scrollTo(0, 9999)); await settle(); },
+    'a program not responding: the red bar and title bar': async () => {
+      await launch('todo'); const f = await (await page.waitForSelector('.win iframe')).contentFrame(); await f.waitForFunction(() => window.PortD);
+      await f.evaluate(() => { setTimeout(() => { for (;;) {} }, 30); }).catch(() => {}); await settle(400);
+      await ev(() => { for (const w of PortDHost.wm.wins) if (w.frame) w.pongAt = 0; }); await page.waitForSelector('#frbar', { timeout: 5000 });
+      await ev(() => document.querySelector('#frbar button').focus()); await settle();      /* keys must not go to the stuck frame */
+    },
     'Settings > Profile': async () => { await launch('builtin:settings', { tab: 'profile' }); },
     'Settings > Data': async () => { await launch('builtin:settings', { tab: 'data' }); },
     'Settings > Data, scrolled to the end': async () => { await launch('builtin:settings', { tab: 'data' }); await page.locator('.spane').evaluate(e => e.scrollTo(0, 9999)); await settle(); },
@@ -144,7 +150,7 @@ module.exports = async ({ check, section, profile, newDir, file, saved }) => {
   /* runs fn(page) on every scene and returns { scene: result } */
   const tour = async fn => { const out = {}; for (const n of names) { await closeAll(); await SCENES[n](); out[n] = await fn(n); } await closeAll(); await set({ taskbar: { tint: 'standard' }, backup: { lastBackupAt: Date.now() } }); return out; };
   const report = (label, res, pick) => { const bad = []; let n = 0; for (const s of Object.keys(res)) { const r = pick(res[s]); n += r.n; for (const b of r.bad) bad.push(s + ': ' + b); } const kinds = [...new Set(bad.map(b => b.replace(/^[^:]*: /, '').replace(/ [\d.]+$/, '')))]; check(label + ' (' + n + ' measured over ' + Object.keys(res).length + ' screens)', bad.length === 0 && n > 0, bad.length + ' failures, ' + kinds.length + ' kinds: ' + kinds.slice(0, 40).join(' ;; ') + ' ;; e.g. ' + bad[0]); };
-  const measure = o => async () => { const m = await ev(MEASURE, o); for (const f of page.frames()) if (f !== page.mainFrame()) { const x = await f.evaluate(MEASURE, o).catch(() => null); if (x) { m.text.push(...x.text.map(t => 'in the program: ' + t)); m.n.text += x.n.text; } } return m; };
+  const measure = o => async () => { const m = await ev(MEASURE, o); for (const f of page.frames()) if (f !== page.mainFrame()) { const x = await Promise.race([f.evaluate(MEASURE, o).catch(() => null), new Promise(r => setTimeout(() => r(null), 2000))]);      /* a program that does not answer is not measured */ if (x) { m.text.push(...x.text.map(t => 'in the program: ' + t)); m.n.text += x.n.text; } } return m; };
 
   /* ------------------------------------------------------------------ */
   section('Contrast, measured over every screen (A06)');

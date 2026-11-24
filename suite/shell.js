@@ -512,7 +512,7 @@ module.exports = async ({ check, section, profile, newDir, file, saved, status, 
   await ev(() => PortDHost.vfs.write('P:\\User\\Config\\settings.json', '{ this is not json')); await settle();
   check('a settings file that cannot be read falls back to the defaults', await ev(() => document.documentElement.dataset.theme === 'light' && getComputedStyle(document.querySelector('#desktop')).backgroundImage.includes('rgb(39, 64, 94)')));
   await page.locator('.snav [data-tab=about]').click();
-  check('About names the version and what the browser gives PortD', /PortD 1\.0\.0/.test(await text(page, '.spane')) && /Browser storage\s+IndexedDB/.test(await text(page, '.spane')) && /Single instance\s+Web Locks/.test(await text(page, '.spane')));
+  check('About names the version and what the browser gives PortD', /PortD 1\.1\.0/.test(await text(page, '.spane')) && /Browser storage\s+IndexedDB/.test(await text(page, '.spane')) && /Single instance\s+Web Locks/.test(await text(page, '.spane')));
   await closeAll();
   check('no CSP violations in the whole shell run', (await ev(() => window.__csp)).length === 0, await ev(() => window.__csp));
   check('no console errors in the whole shell run', ctx.errors.length === 0, ctx.errors);
