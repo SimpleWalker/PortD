@@ -55,10 +55,17 @@ So make a habit of backing up:
 - **Right-click everything.** Files, desktop icons, taskbar buttons and programs all have menus.
 - **Keyboard:** `Ctrl+F6` jumps between the desktop, taskbar and the open window (also from inside a program). `F2` renames, `Delete` sends to the Recycle Bin.
 - **Only install programs you trust.** A program cannot see your drive, but it is still a web page running scripts. In particular, a program can use WebRTC to reach the network, and nothing PortD can do will stop that.
+- **If a program freezes**, its title bar turns red with *(Not responding)* and a red bar appears at the top. Press **Close all programs** to recover. Built-in apps such as Notepad stay open, and your saved files are untouched; anything unsaved inside the programs is lost.
+
+## Limits
+
+- **One stuck program stops all programs.** In Edge and Chrome every program runs in one shared process, apart from PortD. If one program gets stuck, the others stop with it, so PortD marks all of them and offers **Close all programs**. Closing only the stuck one is not enough.
+- **If a browser or company policy runs programs inside PortD's own process**, a stuck program freezes PortD as well. Then no bar can appear, and only reloading the tab helps. Edge and Chrome do not do this by default.
+- The full list is under [Limitations](docs/TECHNICAL.md#limitations) in the technical reference.
 
 ## What has and hasn't been tested
 
-The 1,384 automated checks were run in **headless Chrome on Linux, opening the file from disk**. That is a good test, but it is not your computer. Not yet tested on real hardware:
+The 1,412 automated checks were run in **headless Chrome on Linux, opening the file from disk**. That is a good test, but it is not your computer. Not yet tested on real hardware:
 
 - Microsoft Edge (the main target)
 - Windows, and a genuinely locked-down corporate machine with its real policies

@@ -142,7 +142,7 @@ module.exports = async ({ check, section, profile, newDir, file, saved, reload, 
   const PROTO = 'This package was made for the PortD prototype.';
   check('a prototype package (format 2) is refused with the message', await refusal(Object.assign(mini('a'), { formatVersion: 2 })) === PROTO, await refusal(Object.assign(mini('a'), { formatVersion: 2 })));
   check('…and format 1, and one with no version', await refusal(Object.assign(mini('a'), { formatVersion: 1 })) === PROTO && await refusal(Object.assign(mini('a'), { formatVersion: undefined })) === PROTO);
-  check('a newer package format is refused, naming both versions', /uses package format 4\. This is PortD 1\.0\.0, which installs package format 3\./.test(await refusal(Object.assign(mini('a'), { formatVersion: 4 }))));
+  check('a newer package format is refused, naming both versions', /uses package format 4\. This is PortD 1\.1\.0, which installs package format 3\./.test(await refusal(Object.assign(mini('a'), { formatVersion: 4 }))));
   check('something that is not a package', /is not a PortD program package/.test(await refusal('{"format":"other"}')) && /is not a PortD program package/.test(await refusal('not json')));
   check('an id with ":" is refused, saying why', /contains ":", which is kept for PortD's built-in programs/.test(await refusal(mini('builtin:files'))), await refusal(mini('builtin:files')));
   check('ids outside a-z 0-9 - , empty or over 40 characters are refused', /is not allowed/.test(await refusal(mini('my app'))) && /is not allowed/.test(await refusal(mini('a_b'))) && /is not allowed/.test(await refusal(mini('x'.repeat(41)))) && /is not allowed/.test(await refusal(mini('a', { id: '' }))) && /is not allowed/.test(await refusal(mini('a', { id: '-' + 'é' }))));
@@ -229,7 +229,7 @@ module.exports = async ({ check, section, profile, newDir, file, saved, reload, 
   section('Narrow API: own data and own folder (P05, P11)');
   await ev(() => { PortDHost.launch('kit'); }); await settle(250); f = await frame();
   const app = await f.evaluate(() => PortD.app);
-  check('PortD.app describes the program', app.id === 'kit' && app.name === 'Kit' && app.version === '1.0.0' && app.dir === PROGS + '\\kit' && app.dataDir === CONFIG + '\\kit' && app.args === null && app.portd === '1.0.0' && app.user.displayName === '', app);
+  check('PortD.app describes the program', app.id === 'kit' && app.name === 'Kit' && app.version === '1.0.0' && app.dir === PROGS + '\\kit' && app.dataDir === CONFIG + '\\kit' && app.args === null && app.portd === '1.1.0' && app.user.displayName === '', app);
   check('the API is the specified set', await f.evaluate(() => Object.keys(PortD).sort().join() + ' fs:' + Object.keys(PortD.fs).sort().join() + ' ui:' + Object.keys(PortD.ui).sort().join()) === 'app,assets,close,fs,notify,onOpenFile,openUrl,setTitle,ui fs:copy,exists,list,mkdir,move,read,remove,rename,write ui:openFile,saveFile');
   check('listing the data folder before anything is saved gives an empty list', JSON.stringify(await val(f, 'PortD.fs.list("")')) === '[]' && !(await has(CONFIG + '\\kit')));
   check('write with a relative path lands in the data folder, which is made as needed', await val(f, 'PortD.fs.write("a.txt", "one")') === CONFIG + '\\kit\\a.txt' && await read(CONFIG + '\\kit\\a.txt') === 'one');

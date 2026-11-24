@@ -390,7 +390,7 @@ input[type=color]{width:2.375rem;height:1.75rem;padding:1px;border:1px solid var
    ===================================================================== */
 
 /* ---------- constants ---------- */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const FORMAT = 'portd-data';
 const FORMAT_VERSION = 2;
 const MIGRATIONS = {};              /* n: doc => doc, taking a format n document to format n + 1. Run only when a document is opened. */
@@ -3622,6 +3622,7 @@ async function boot() {
   let resave = !raw;
   if (!raw) state = newDocument();
   else try { resave = raw.formatVersion !== FORMAT_VERSION; state = openDocument(raw, 'The desktop stored in this browser'); } catch (e) { return refuse(e); }
+  if (appsTopUp(state)) resave = true;
   persist.init();
   await link.init();
   initDesktop(); initTaskbar();
@@ -3643,4 +3644,3 @@ boot().catch(e => { console.error(e); document.body.append(h('div', { class: 'ov
 </script>
 </body>
 </html>
-  if (appsTopUp(state)) resave = true;

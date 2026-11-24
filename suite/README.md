@@ -1,6 +1,6 @@
 # PortD test suite
 
-End-to-end tests for `portd.html`. They drive a real browser with real mouse and keyboard input, read back downloaded backups from disk, and measure contrast, focus rings and layout. 1.0.0 passes all of them: **1,377 checks** without the prototype file, 1,384 with it.
+End-to-end tests for `portd.html`. They drive a real browser with real mouse and keyboard input, read back downloaded backups from disk, and measure contrast, focus rings and layout. 1.1.0 passes all of them: **1,412 checks** without the prototype file (1,419 expected with it; not run for 1.1.0).
 
 ## Layout
 
@@ -12,6 +12,7 @@ suite/
   programs.js   installing, running and sandboxing programs
   data.js       backup, restore, Check my data, linked data file
   polish.js     profile, first start, taskbar options, text size, motion, touch
+  freeze.js     programs that stop responding: the red bar, Close all programs, the limit; P:\OS\Apps repair
   audit.js      measured contrast, focus rings, fit, forced colours
 ```
 
@@ -25,7 +26,7 @@ node suite/run.js [portd.html] [prototype.html]
 
 - `portd.html` defaults to `../portd.html` relative to the suite.
 - The prototype (0.x) file is optional. Without it, the checks that need it are skipped.
-- `ONLY=shell|files|programs|data|polish|audit` runs one module.
+- `ONLY=shell|files|programs|data|polish|freeze|audit` runs one module.
 - A full run takes well over ten minutes. Run it in the background if your shell has a time limit.
 - Exit codes: `0` all passed, `1` some failed, `2` the suite could not run.
 
@@ -42,7 +43,7 @@ node suite/run.js [portd.html] [prototype.html]
 
 ## Last verified
 
-Headless Chrome on Linux, 1,377 checks (no prototype file), 0 failed.
+Headless Chrome 153 on Linux, 1,412 checks (no prototype file), 0 failed.
 
 ## Writing a module
 
