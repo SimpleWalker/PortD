@@ -1,0 +1,17 @@
+{
+ "format": "portd-app",
+ "formatVersion": 3,
+ "id": "freeze-test",
+ "name": "Freeze test",
+ "version": "1.1.0",
+ "description": "Test program: one button stops it responding for good, the other for 15 seconds.",
+ "entry": "index.html",
+ "width": 460,
+ "height": 240,
+ "files": {
+  "index.html": {
+   "enc": "text",
+   "d": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Freeze test</title>\n<style>body{font:14px system-ui,sans-serif;margin:16px}button{font:inherit;min-height:40px;padding:0 14px;margin:0 8px 8px 0}</style></head><body>\n<p>This program tests what PortD does when a program stops responding.</p>\n<p><button id=\"f\">Freeze for good</button> <button id=\"r\">Freeze for 15 seconds, then recover</button></p>\n<p id=\"t\">Answering.</p>\n<script>\ndocument.getElementById('f').onclick = function () { for (;;) {} };\ndocument.getElementById('r').onclick = function () {\n  var end = Date.now() + 15000;\n  while (Date.now() < end) {}\n  document.getElementById('t').textContent = 'Recovered at ' + new Date().toLocaleTimeString() + '. Answering again.';\n};\n</script></body></html>"
+  }
+ }
+}

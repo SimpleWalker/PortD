@@ -302,9 +302,22 @@ input[type=color]{width:2.375rem;height:1.75rem;padding:1px;border:1px solid var
 #startmenu .foot .btn{flex:1}
 
 /* read-only banner (PortD is open in another tab or window) */
-:root.ro{--bh:2.125rem}
-:root.narrow.ro{--bh:3.5rem}
-#robar{position:absolute;left:0;right:0;top:0;height:var(--bh);display:flex;align-items:center;justify-content:center;gap:.75rem;padding:0 .75rem;background:#8a5a10;color:#fff;font-size:.78125rem;line-height:1.3;z-index:8600}
+:root{--rh:2.125rem}
+:root.narrow{--rh:3.5rem}
+:root.ro,:root.fr{--bh:var(--rh)}
+:root.ro.fr{--bh:calc(2 * var(--rh))}
+#frbar{position:absolute;left:0;right:0;top:0;height:var(--rh);display:flex;align-items:center;justify-content:center;gap:.75rem;padding:0 .75rem;background:#b3261e;color:#fff;font-size:.78125rem;line-height:1.3;z-index:8600}
+:root.ro #frbar{top:var(--rh)}
+#frbar .btn{flex:none;padding:3px .625rem;background:#fff;color:#7a1712;border-color:transparent;font-weight:600}
+#frbar :focus-visible{outline:2px solid #fff;outline-offset:2px}
+.win.hung .tb{background:#b3261e;border-bottom-color:#b3261e}
+.win.hung .tb .ttl,.win.hung .tb .nr,.win.hung .tb .wbtn{color:#fff}
+.win.hung .tb .nr{flex:none;font-weight:600}
+.win.hung .tb .ttl{flex:0 1 auto}
+.win.hung .tb .nr{margin-right:auto}
+.win.hung .tb .wbtn:hover{background:rgba(255,255,255,.18)}
+.win.hung .tb .wbtn:focus-visible{outline-color:#fff}
+#robar{position:absolute;left:0;right:0;top:0;height:var(--rh);display:flex;align-items:center;justify-content:center;gap:.75rem;padding:0 .75rem;background:#8a5a10;color:#fff;font-size:.78125rem;line-height:1.3;z-index:8600}
 #robar .btn{flex:none;padding:3px .625rem;background:#fff;color:#3a2a05;border-color:transparent;font-weight:600}
 #robar :focus-visible{outline:2px solid #fff;outline-offset:2px}
 
@@ -327,6 +340,7 @@ input[type=color]{width:2.375rem;height:1.75rem;padding:1px;border:1px solid var
 }
 @media (prefers-contrast:more){
   :root{--muted:#36414d;--line:#7b8794;--edge:#36414d;--hover:rgba(28,37,48,.16);--danger:#8c1d18}
+  #frbar,.win.hung .tb{background:#8c1d18;border-bottom-color:#8c1d18}
   [data-theme=dark]{--muted:#d3dbe3;--line:#8d99a6;--edge:#d3dbe3;--hover:rgba(255,255,255,.11);--danger:#ffb4ab}
   :focus-visible{outline-width:3px}
   .dicon .lbl,.sw span{background:#000}
@@ -335,11 +349,12 @@ input[type=color]{width:2.375rem;height:1.75rem;padding:1px;border:1px solid var
 @media (forced-colors:active){
   .win,.menu,.dlg,#startmenu,.toast,.notice,.tip,.snappanel,.draglabel{border:1px solid CanvasText}
   #taskbar{border-top:1px solid CanvasText}
-  #robar{border-bottom:1px solid CanvasText}
+  #robar,#frbar{border-bottom:1px solid CanvasText}
+  .win.hung .tb{border-bottom:2px solid CanvasText}
   .task,#start,.tbtn,.wbtn,.mi,.smi,.sn,.seg button{border:1px solid transparent}
   .btn.primary{forced-color-adjust:none;background:ButtonText;color:ButtonFace;border:1px solid ButtonText}
   .task.on,.sn.on,.seg button.on,.snz.on,.snz:hover,.mi:hover:not([aria-disabled]),.mi[aria-expanded=true],.dicon.sel,.row.sel,.brow.sel,.side button.on,.gbtn.on,.keys button.eq{forced-color-adjust:none;background:Highlight;color:HighlightText;box-shadow:none}
-  :focus-visible,#taskbar :focus-visible,#robar :focus-visible,.dicon:focus-visible{outline:2px solid Highlight;box-shadow:none}
+  :focus-visible,#taskbar :focus-visible,#robar :focus-visible,#frbar :focus-visible,.dicon:focus-visible{outline:2px solid Highlight;box-shadow:none}
   .dicon .lbl,.sw span{forced-color-adjust:none;background:Canvas;color:CanvasText}
   .dot,.ico,.sw{forced-color-adjust:none}
   .task.pin.run::after,.dropbar{forced-color-adjust:none;background:Highlight}
@@ -1529,6 +1544,7 @@ const wm = {
     if (this.active === win) this.active = null;
     const t = this.active || this.top();
     if (t) this.focus(t, had); else { renderTasks(); if (had) focusDesktop(); }      /* focus must not fall out of the page */
+    if (win.frame) watch.sync();
     return true;
   },
   /* keep windows reachable when the work area changes; snapped windows follow their zone */
@@ -1827,6 +1843,7 @@ function programShim(I) {
     const d = e.data, w = d && wait.get(d.id);
     if (e.source !== parent || !d || d.portd !== 1) return;
     if (d.open) { if (onOpen) onOpen(d.open); }
+    else if (d.ping) send({ pong: d.ping });            /* PortD asks whether the program still answers */
     else if (w) { wait.delete(d.id); if (d.err) w[1](new Error(d.err)); else w[0](d.v); }
   });
   addEventListener('keydown', e => { if (I.keys.some(k => k.key === e.key && k.ctrl === e.ctrlKey && k.shift === e.shiftKey && k.alt === e.altKey)) send({ key: { key: e.key, ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey } }); }, true);
@@ -1895,12 +1912,67 @@ function runProgram(p, args) {
     call: async (m, a) => { if (!Object.prototype.hasOwnProperty.call(API, m)) throw new Error('PortD has no call named ' + m); return API[m](...a); } });
   win.body.append(frame);
   frame.addEventListener('load', () => { if (wm.active === win && win.el.contains(document.activeElement)) frame.focus(); });
+  win.pongAt = Date.now(); watch.sync();               /* counts from the start: a program that never answers is caught too */
   return win;
 }
+/* ---------- programs that stop answering ----------
+   Each program runs in a sandboxed frame. Chrome and Edge run all those frames in one process of their own, apart from
+   PortD: a program stuck in an endless loop stops every program, but not PortD. While a program is open, PortD asks each
+   one every 3 s whether it still answers, and looks at the answers every second. When one has not answered for 6 s, its title bar turns red with
+   "(Not responding)", and a red bar offers to close all programs: once no program frame is left, the browser frees that
+   process and programs open normally again. Built-in apps are part of PortD and are not asked. */
+const watch = {
+  EVERY: 3000, LATE: 6000, timer: null, n: 0,
+  /* runs only while a program window is open */
+  sync() {
+    const any = wm.wins.some(w => w.frame);
+    if (any && !this.timer) { this.n = 0; this.timer = setInterval(() => this.tick(), 1000); }
+    else if (!any && this.timer) { clearInterval(this.timer); this.timer = null; }
+    this.check();
+  },
+  tick() {
+    if (document.hidden) return;                       /* the browser slows timers in a hidden tab; answers would look late */
+    const n = Date.now();
+    if (this.n++ % (this.EVERY / 1000) === 0) for (const w of wm.wins) if (w.frame) try { w.frame.contentWindow.postMessage({ portd: 1, ping: n }, '*'); } catch (e) {}
+    this.check();
+  },
+  stuck() { const n = Date.now(); return wm.wins.filter(w => w.frame && n - (w.pongAt || 0) > this.LATE); },
+  check() {
+    const stuck = this.stuck();
+    for (const w of wm.wins) if (w.frame) this.mark(w, stuck.includes(w));
+    let b = $('#frbar');
+    if (stuck.length && !b) {
+      b = h('div', { id: 'frbar', role: 'alert' },
+        h('span', null, 'One or more programs have stopped responding. Close all programs to recover; anything unsaved in them will be lost.'),
+        h('button', { class: 'btn', onclick: () => this.closeAll() }, 'Close all programs'));
+      const ro = $('#robar'); if (ro) ro.after(b); else document.body.prepend(b);      /* under the read-only bar when both show */
+    }
+    else if (!stuck.length && b) { const had = b.contains(document.activeElement); b.remove(); if (had) focusDesktop(); }
+    if (document.documentElement.classList.toggle('fr', !!stuck.length) !== !!this.was && inst.booted) relayout();      /* the bar takes room from the desktop */
+    this.was = !!stuck.length;
+  },
+  mark(w, on) {
+    if (!!w.hung === on) return;
+    w.hung = on; w.el.classList.toggle('hung', on);
+    const ttl = w.el.querySelector('.tb .ttl');
+    let nr = w.el.querySelector('.tb .nr');
+    if (on && !nr) { ttl.after(nr = h('span', { class: 'nr', id: ttl.id + '-nr' }, '(Not responding)')); w.el.setAttribute('aria-labelledby', ttl.id + ' ' + nr.id); }
+    else if (!on && nr) { nr.remove(); w.el.setAttribute('aria-labelledby', ttl.id); }
+  },
+  /* closes every program window at once, without waiting for any of them; built-in apps stay open */
+  async closeAll() {
+    const ps = wm.wins.filter(w => w.frame);
+    for (const w of ps) await wm.close(w, true);
+    toast('Closed ' + count(ps.length, 'program') + '. You can open them again from the PortD menu.');
+  }
+};
+/* back in a hidden tab: start counting again rather than reading the slowed answers as a program that stopped */
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { for (const w of wm.wins) if (w.frame) w.pongAt = Math.max(w.pongAt || 0, Date.now() - watch.EVERY); watch.check(); } });
 /* What a program asks for arrives here. The sender must be the frame of an open program window; nothing else is answered. */
 addEventListener('message', e => {
   const win = wm.wins.find(w => w.frame && w.frame.contentWindow === e.source), d = e.data;
   if (!win || !d || d.portd !== 1) return;
+  if (d.pong) { win.pongAt = Date.now(); watch.check(); return; }
   if (d.key) {                      /* a PortD shortcut pressed inside the program: act as if it was pressed outside */
     const k = FORWARD_KEYS.find(f => f.key === d.key.key && f.ctrl === d.key.ctrl && f.shift === d.key.shift && f.alt === d.key.alt);
     if (k) document.dispatchEvent(new KeyboardEvent('keydown', { key: k.key, ctrlKey: k.ctrl, shiftKey: k.shift, altKey: k.alt, bubbles: true, cancelable: true }));

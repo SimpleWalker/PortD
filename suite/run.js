@@ -486,6 +486,7 @@ const text = (page, sel) => page.evaluate(sel => { const e = document.querySelec
   if (!process.env.ONLY || process.env.ONLY === 'programs') await require('./programs.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'data') await require('./data.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'polish') await require('./polish.js')(kit);
+  if (!process.env.ONLY || process.env.ONLY === 'freeze') await require('./freeze.js')(kit);
   if (!process.env.ONLY || process.env.ONLY === 'audit') await require('./audit.js')(kit);
 
   /* ------------------------------------------------------------------ */
