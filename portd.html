@@ -2718,7 +2718,20 @@ function showProps(path) {
 
 /* ---------- data safety: replacing the desktop, backup and restore, the linked data file ----------
    Nothing here is encrypted, by decision: a backup and a linked data file are the plain JSON data document. */
-function adopt(doc) { state = doc; settingsCache = progCache = assocCache = null; for (const k of Object.keys(asmCache)) delete asmCache[k]; }
+function adopt(doc) { state = doc; settingsCache = progCache = assocCache = null; for (const k of Object.keys(asmCache)) delete asmCache[k]; appsTopUp(doc); }
+/* P:\OS\Apps describes the built-in apps. A desktop where that folder or a description in it is missing or unreadable
+   gets it put back: only in P:\OS\Apps, nothing else. Returns true when something was put back. */
+function appsTopUp(doc) {
+  const os = doc && doc.fs && doc.fs.c && doc.fs.c.OS;
+  if (!os || os.t !== 'd') return false;
+  let fixed = false;
+  const now = Date.now(), apps = os.c.Apps && os.c.Apps.t === 'd' ? os.c.Apps : (fixed = true, os.c.Apps = { t: 'd', c: {}, ct: now, mt: now });
+  for (const id of Object.keys(BUILTIN)) {
+    const n = apps.c[id + '.json'], d = n && n.t === 'f' && n.enc === 'text' ? parseJSON(n.d) : null;
+    if (!d || d.id !== 'builtin:' + id) { apps.c[id + '.json'] = { t: 'f', enc: 'text', d: JSON.stringify({ id: 'builtin:' + id, name: BUILTIN[id].name, description: BUILTIN[id].desc }, null, 2), ct: now, mt: now }; apps.mt = now; fixed = true; }
+  }
+  return fixed;
+}
 function sumText(s) { return count(s.files, 'file') + ' in ' + count(s.programs, 'program') + ', ' + fmtSize(s.bytes); }
 function sameSum(a, b) { return !!a && !!b && ['files', 'folders', 'programs', 'bytes'].every(k => a[k] === b[k]); }
 function writable() { if (inst.readOnly) throw new Error('PortD is open in another tab or window, so this one cannot change the desktop. Use Take over first.'); }
@@ -3558,3 +3571,4 @@ boot().catch(e => { console.error(e); document.body.append(h('div', { class: 'ov
 </script>
 </body>
 </html>
+  if (appsTopUp(state)) resave = true;
